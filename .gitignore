@@ -1,1 +1,2 @@
-.env*
+# to hide secret files
+.env *
