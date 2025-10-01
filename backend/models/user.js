@@ -1,60 +1,27 @@
-const express = require("express");
-const router = express.Router();
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+//this is so that webside has a model for user
+const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-// Signup Route
-router.post("/signup", async (req, res) => {
-  try {
-    const { username, email, password } = req.body;
+// User Schema
+const UserSchema = new mongoose.Schema(
+  {
+    username: { type: String, required: true, unique: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true }
+  },
+  { timestamps: true }
+);
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
-    }
-
-    // Create new user
-    const user = new User({ username, email, password });
-    await user.save();
-
-    res.status(201).json({ message: "User registered successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
-  }
+// Hash password before saving
+UserSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
 });
 
-// Login Route
-router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
+// Compare password method
+UserSchema.methods.matchPassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
 
-    // Find user
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid email or password" });
-    }
-
-    // Match password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid email or password" });
-    }
-
-    // Create JWT token
-    const token = jwt.sign(
-      { id: user._id, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
-    res.json({ token });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-module.exports = router;
+module.exports = mongoose.model("User", UserSchema);
