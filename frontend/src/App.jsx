@@ -1,8 +1,15 @@
+import { Routes, Route } from "react-router-dom";
+import Signup from "./pages/signup";
+import Login from "./pages/login";
+import Dashboard from "./pages/dashboard";
+
 function App() {
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h1>Frontend is working 🚀</h1>
-    </div>
+    <Routes>
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+    </Routes>
   );
 }
 
