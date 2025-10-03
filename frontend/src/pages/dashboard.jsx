@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import API from "../api";
 
-function Dashboard() {
+export default function Dashboard() {
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
@@ -9,25 +10,41 @@ function Dashboard() {
       try {
         const res = await API.get("/posts");
         setPosts(res.data);
-      } catch (err) {
-        console.error(err);
+      } catch (error) {
+        console.error("Failed to fetch posts:", error);
       }
     };
     fetchPosts();
   }, []);
 
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h2>Posts</h2>
-      {posts.length === 0 ? <p>No posts yet</p> : null}
-      {posts.map((post) => (
-        <div key={post._id} style={{ border: "1px solid #ccc", margin: "10px", padding: "10px" }}>
-          <h3>{post.title}</h3>
-          <p>{post.content}</p>
-        </div>
-      ))}
+    <div>
+      <h2>Dashboard</h2>
+
+      {/* Create Post Button */}
+      <Link to="/createpost">
+        <button style={{ marginBottom: "1rem" }}>+ Create New Post</button>
+      </Link>
+
+      {/* Posts List */}
+      {posts.length === 0 ? (
+        <p>No posts yet.</p>
+      ) : (
+        <ul>
+          {posts.map((post) => (
+            <li key={post._id}>
+              <h3>{post.title}</h3>
+              <p>{post.content}</p>
+              <p>
+                <small>
+                  Author: {post.author?.username || "Unknown"} |{" "}
+                  {new Date(post.createdAt).toLocaleString()}
+                </small>
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
-
-export default Dashboard;
