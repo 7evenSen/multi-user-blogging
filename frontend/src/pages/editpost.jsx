@@ -1,53 +1,47 @@
-import React, { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import api from "../api";
 
-function EditPost() {
-  const { id } = useParams();
-  const [formData, setFormData] = useState({ title: "", content: "" });
+export default function EditPost() {
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { id } = useParams();
 
   useEffect(() => {
     const fetchPost = async () => {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:5000/api/posts/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      setFormData({ title: data.title, content: data.content });
+      try {
+        const res = await api.get(`/posts/${id}`);
+        setTitle(res.data.title);
+        setContent(res.data.content);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load post");
+      }
     };
     fetchPost();
   }, [id]);
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
-    const res = await fetch(`http://localhost:5000/api/posts/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(formData),
-    });
-    if (res.ok) {
+    try {
+      await api.put(`/posts/${id}`, { title, content });
       navigate("/dashboard");
-    } else {
-      alert("Failed to update post");
+    } catch (err) {
+      setError(err.response?.data?.message || "Update failed");
     }
   };
 
   return (
     <div>
       <h2>Edit Post</h2>
+      {error && <p style={{ color: "red" }}>{error}</p>}
       <form onSubmit={handleSubmit}>
-        <input name="title" value={formData.title} onChange={handleChange} />
-        <textarea name="content" value={formData.content} onChange={handleChange}></textarea>
+        <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Title" />
+        <textarea value={content} onChange={e => setContent(e.target.value)} placeholder="Content"></textarea>
         <button type="submit">Update</button>
       </form>
     </div>
   );
 }
-
-export default EditPost;

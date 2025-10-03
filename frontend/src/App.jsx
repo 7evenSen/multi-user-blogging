@@ -1,12 +1,11 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Signup from "./pages/Signup";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import CreatePost from "./pages/CreatePost";
-import EditPost from "./pages/EditPost";
+import Signup from "./pages/signup";
+import Login from "./pages/login";
+import Dashboard from "./pages/dashboard";
+import CreatePost from "./pages/createpost";
+import EditPost from "./pages/editpost";
 
-function App() {
+export default function App() {
   return (
     <Router>
       <Routes>
@@ -19,5 +18,3 @@ function App() {
     </Router>
   );
 }
-
-export default App;

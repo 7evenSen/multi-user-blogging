@@ -1,84 +1,69 @@
-import React, { useEffect, useState } from "react";
-import { getPosts, deletePost } from "../api";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import api from "../api";
 
 export default function Dashboard() {
   const [posts, setPosts] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [user, setUser] = useState({});
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // get user from localStorage
-    const user = JSON.parse(localStorage.getItem("user"));
-    setCurrentUser(user);
+    const fetchData = async () => {
+      try {
+        const userRes = await api.get("/auth/me");
+        setUser(userRes.data.user);
 
-    getPosts()
-      .then((res) => res.json())
-      .then((data) => setPosts(data));
+        const postsRes = await api.get("/posts");
+        setPosts(postsRes.data);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load data");
+      }
+    };
+    fetchData();
   }, []);
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this post?")) {
-      await deletePost(id);
-      setPosts(posts.filter((p) => p._id !== id));
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
+    try {
+      await api.delete(`/posts/${id}`);
+      setPosts(posts.filter(post => post._id !== id));
+    } catch (err) {
+      console.error(err);
+      alert("Delete failed");
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    window.location.href = "/login";
+    navigate("/login");
   };
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div>
       <h2>Dashboard</h2>
-
-      {currentUser ? (
-        <p>
-          Logged in as: <strong>{currentUser.username}</strong> (
-          {currentUser.email})
-        </p>
-      ) : (
-        <p>Loading user info...</p>
-      )}
-
-      <Link to="/create">Create New Post</Link>
-      <button onClick={handleLogout} style={{ marginLeft: "10px" }}>
-        Logout
-      </button>
-
-      <div style={{ marginTop: "20px" }}>
-        {posts.map((post) => (
-          <div
-            key={post._id}
-            style={{
-              border: "1px solid #ddd",
-              padding: "10px",
-              marginBottom: "10px",
-            }}
-          >
+      <p>Logged in as: {user.username}</p>
+      <button onClick={handleLogout}>Logout</button>
+      <Link to="/createpost">Create Post</Link>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      <ul>
+        {posts.map(post => (
+          <li key={post._id}>
             <h3>{post.title}</h3>
             <p>{post.content}</p>
             <p>
-              <strong>Author:</strong> {post.author?.username || "Unknown"}
+              By: {post.author?.username} | {new Date(post.createdAt).toLocaleString()}
             </p>
-            <p>
-              <strong>Posted on:</strong>{" "}
-              {new Date(post.createdAt).toLocaleString()}
-            </p>
-
-            {/* show edit/delete only for the author */}
-            {currentUser && post.author?._id === currentUser.id && (
+            {user.id === post.author?._id && (
               <>
-                <Link to={`/edit/${post._id}`} style={{ marginRight: "10px" }}>
-                  Edit
-                </Link>
+                <Link to={`/editpost/${post._id}`}>Edit</Link>
                 <button onClick={() => handleDelete(post._id)}>Delete</button>
               </>
             )}
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }

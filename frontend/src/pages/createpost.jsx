@@ -1,42 +1,32 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../api";
 
-function CreatePost() {
-  const [formData, setFormData] = useState({ title: "", content: "" });
+export default function CreatePost() {
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
-
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
-
-    const res = await fetch("http://localhost:5000/api/posts", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(formData),
-    });
-
-    if (res.ok) {
+    try {
+      await api.post("/posts", { title, content });
       navigate("/dashboard");
-    } else {
-      alert("Failed to create post");
+    } catch (err) {
+      setError(err.response?.data?.message || "Create post failed");
     }
   };
 
   return (
     <div>
       <h2>Create Post</h2>
+      {error && <p style={{ color: "red" }}>{error}</p>}
       <form onSubmit={handleSubmit}>
-        <input name="title" placeholder="Title" onChange={handleChange} />
-        <textarea name="content" placeholder="Content" onChange={handleChange}></textarea>
+        <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Title" />
+        <textarea value={content} onChange={e => setContent(e.target.value)} placeholder="Content"></textarea>
         <button type="submit">Create</button>
       </form>
     </div>
   );
 }
-
-export default CreatePost;

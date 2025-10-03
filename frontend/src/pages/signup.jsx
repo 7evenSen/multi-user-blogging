@@ -1,38 +1,35 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import api from "../api";
 
-function Signup() {
-  const [formData, setFormData] = useState({ username: "", email: "", password: "" });
+export default function Signup() {
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
-
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await fetch("http://localhost:5000/api/auth/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
-    if (res.ok) {
+    try {
+      await api.post("/auth/signup", { username, email, password });
       navigate("/login");
-    } else {
-      alert("Signup failed");
+    } catch (err) {
+      setError(err.response?.data?.message || "Signup failed");
     }
   };
 
   return (
     <div>
       <h2>Signup</h2>
+      {error && <p style={{ color: "red" }}>{error}</p>}
       <form onSubmit={handleSubmit}>
-        <input name="username" placeholder="Username" onChange={handleChange} />
-        <input name="email" placeholder="Email" onChange={handleChange} />
-        <input name="password" type="password" placeholder="Password" onChange={handleChange} />
+        <input value={username} onChange={e => setUsername(e.target.value)} placeholder="Username" />
+        <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" />
+        <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="Password" />
         <button type="submit">Signup</button>
       </form>
       <p>Already have an account? <Link to="/login">Login</Link></p>
     </div>
   );
 }
-
-export default Signup;

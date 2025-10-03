@@ -1,54 +1,34 @@
-import React, { useState } from "react";
-import { login, getMe } from "../api";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import api from "../api";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
     try {
-      const res = await login({ email, password });
-      if (!res.ok) throw new Error("Login failed");
-
-      const data = await res.json();
-      localStorage.setItem("token", data.token);
-
-      // 🔹 fetch user details
-      const meRes = await getMe();
-      const meData = await meRes.json();
-      localStorage.setItem("user", JSON.stringify(meData.user));
-
-      window.location.href = "/dashboard";
+      const res = await api.post("/auth/login", { email, password });
+      localStorage.setItem("token", res.data.token);
+      navigate("/dashboard");
     } catch (err) {
-      setError("Login failed: " + err.message);
+      setError(err.response?.data?.message || "Login failed");
     }
   };
 
   return (
     <div>
       <h2>Login</h2>
+      {error && <p style={{ color: "red" }}>{error}</p>}
       <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" />
+        <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="Password" />
         <button type="submit">Login</button>
       </form>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <p>
-        Don’t have an account? <a href="/signup">Signup</a>
-      </p>
+      <p>Don't have an account? <Link to="/signup">Signup</Link></p>
     </div>
   );
 }
