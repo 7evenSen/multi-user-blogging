@@ -1,20 +1,29 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../api";
 
-export default function CreatePost() {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+function CreatePost() {
+  const [formData, setFormData] = useState({ title: "", content: "" });
   const navigate = useNavigate();
+
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      await API.post("/posts", { title, content });
-      alert("Post created successfully!");
-      navigate("/dashboard"); // 👈 redirect to dashboard after success
-    } catch (error) {
-      alert("Failed to create post: " + (error.response?.data?.message || error.message));
+    const token = localStorage.getItem("token");
+
+    const res = await fetch("http://localhost:5000/api/posts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(formData),
+    });
+
+    if (res.ok) {
+      navigate("/dashboard");
+    } else {
+      alert("Failed to create post");
     }
   };
 
@@ -22,23 +31,12 @@ export default function CreatePost() {
     <div>
       <h2>Create Post</h2>
       <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
-        <br />
-        <textarea
-          placeholder="Content"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          required
-        />
-        <br />
+        <input name="title" placeholder="Title" onChange={handleChange} />
+        <textarea name="content" placeholder="Content" onChange={handleChange}></textarea>
         <button type="submit">Create</button>
       </form>
     </div>
   );
 }
+
+export default CreatePost;

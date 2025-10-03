@@ -1,26 +1,22 @@
 import React from "react";
-import { Routes, Route, Link } from "react-router-dom";
-import Signup from "./pages/signup.jsx";
-import Login from "./pages/login.jsx";
-import Dashboard from "./pages/dashboard.jsx";
-import Createpost from "./pages/createpost.jsx";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Signup from "./pages/Signup";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import CreatePost from "./pages/CreatePost";
+import EditPost from "./pages/EditPost";
 
 function App() {
   return (
-    <div>
-      <nav>
-        <Link to="/signup">Signup</Link> |{" "}
-        <Link to="/login">Login</Link> |{" "}
-        <Link to="/dashboard">Dashboard</Link> |{" "}
-        <Link to="/createpost">Create Post</Link>
-      </nav>
+    <Router>
       <Routes>
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/createpost" element={<Createpost />} />
+        <Route path="/createpost" element={<CreatePost />} />
+        <Route path="/editpost/:id" element={<EditPost />} />
       </Routes>
-    </div>
+    </Router>
   );
 }
 

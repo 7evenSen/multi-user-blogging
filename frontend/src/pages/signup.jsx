@@ -1,19 +1,23 @@
 import React, { useState } from "react";
-import API from "../api";
+import { Link, useNavigate } from "react-router-dom";
 
-export default function Signup() {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+function Signup() {
+  const [formData, setFormData] = useState({ username: "", email: "", password: "" });
+  const navigate = useNavigate();
+
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const res = await API.post("/auth/signup", { username, email, password });
-      setMessage(res.data.message); // "User registered successfully"
-    } catch (error) {
-      setMessage(error.response?.data?.message || "Signup failed");
+    const res = await fetch("http://localhost:5000/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+    if (res.ok) {
+      navigate("/login");
+    } else {
+      alert("Signup failed");
     }
   };
 
@@ -21,12 +25,14 @@ export default function Signup() {
     <div>
       <h2>Signup</h2>
       <form onSubmit={handleSubmit}>
-        <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
-        <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <input name="username" placeholder="Username" onChange={handleChange} />
+        <input name="email" placeholder="Email" onChange={handleChange} />
+        <input name="password" type="password" placeholder="Password" onChange={handleChange} />
         <button type="submit">Signup</button>
       </form>
-      <p>{message}</p>
+      <p>Already have an account? <Link to="/login">Login</Link></p>
     </div>
   );
 }
+
+export default Signup;
